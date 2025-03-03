@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .add-todo {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .todo-list {
+            list-style: none;
+        }
+
+        .todo-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            touch-action: pan-y pinch-zoom;
+            position: relative;
+            transition: background-color 0.3s ease;
+            overflow: hidden;
+            will-change: transform;
+            transform: translateX(0);
+            -webkit-transform: translateX(0);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .todo-item .content {
+            flex: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        .todo-item.completed {
+            background: #e8f5e9;
+        }
+
+        .todo-item.completed .content {
+            text-decoration: line-through;
+            color: #666;
+        }
+
+        .todo-item.swiping {
+            cursor: grabbing;
+            background: #f0f0f0;
+        }
+
+        .todo-item.swipe-delete {
+            animation: slideOutLeft 0.3s ease forwards;
+        }
+
+        .todo-item.swipe-complete {
+            animation: slideOutRight 0.3s ease forwards;
+        }
+
+        @keyframes slideOutLeft {
+            to {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes slideOutRight {
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .action-buttons {
+            display: none;
+            gap: 8px;
+        }
+
+        @media (hover: hover) {
+            .todo-item .action-buttons {
+                display: flex;
+            }
+
+            .instruction.mobile {
+                display: none;
+            }
+        }
+
+        @media (hover: none) {
+            .todo-item .action-buttons {
+                display: none;
+            }
+
+            .instruction.desktop {
+                display: none;
+            }
+        }
+
+        .btn-complete {
+            background: #27ae60;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-complete:hover {
+            background: #219a52;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .swipe-hint {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            border-radius: 8px;
+            opacity: 0;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 20px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 14px;
+        }
+
+        .swipe-hint.delete {
+            background: linear-gradient(to right, transparent, rgba(231, 76, 60, 0.9));
+            justify-content: flex-end;
+        }
+
+        .swipe-hint.complete {
+            background: linear-gradient(to left, transparent, rgba(39, 174, 96, 0.9));
+            justify-content: flex-start;
+        }
+
+        .swipe-hint.delete::after {
+            content: "Delete";
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .swipe-hint.complete::after {
+            content: "Complete";
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .instruction {
+            text-align: center;
+            color: #666;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Todo App</h1>
+        <div class="add-todo">
+            <input type="text" id="todoInput" placeholder="Add a new task..." autocomplete="off">
+            <button onclick="addTodo()">Add</button>
+        </div>
+        <ul id="todoList" class="todo-list"></ul>
+        <p class="instruction mobile">Swipe left to delete, right to mark as done</p>
+        <p class="instruction desktop">Use the buttons to manage your todos</p>
+    </div>
+
+    <script>
+        let todos = [];
+        let swipeStartX = null;
+        let swipeStartY = null;
+        let swipeStartTime = null;
+        let currentSwipingElement = null;
+        let isVerticalScroll = false;
+
+        function fetchTodos() {
+            fetch('/api/v1/todos')
+                .then(response => response.json())
+                .then(data => {
+                    todos = data;
+                    renderTodos();
+                })
+                .catch(error => console.error('Error fetching todos:', error));
+        }
+
+        function renderTodos() {
+            const todoList = document.getElementById('todoList');
+            todoList.innerHTML = '';
+            
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                li.setAttribute('data-id', todo.id);
+
+                const content = document.createElement('div');
+                content.className = 'content';
+                content.textContent = todo.title;
+
+                const actionButtons = document.createElement('div');
+                actionButtons.className = 'action-buttons';
+                
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'btn-complete';
+                completeBtn.textContent = todo.completed ? 'Undo' : 'Complete';
+                completeBtn.onclick = () => toggleTodo(todo);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-delete';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = () => deleteTodo(todo.id);
+
+                actionButtons.appendChild(completeBtn);
+                actionButtons.appendChild(deleteBtn);
+
+                const swipeHint = document.createElement('div');
+                swipeHint.className = 'swipe-hint';
+
+                li.appendChild(content);
+                li.appendChild(actionButtons);
+                li.appendChild(swipeHint);
+
+                // Add touch event listeners only for touch devices
+                if (window.matchMedia('(hover: none)').matches) {
+                    li.addEventListener('touchstart', handleTouchStart);
+                    li.addEventListener('touchmove', handleTouchMove);
+                    li.addEventListener('touchend', handleTouchEnd);
+                }
+
+                todoList.appendChild(li);
+            });
+        }
+
+        let lastTouchX = null;
+        let lastTouchTime = null;
+        let swipeVelocity = 0;
+        const SPRING_CONSTANT = 0.1;
+        const MIN_SWIPE_VELOCITY = 0.3;
+        const MAX_SWIPE_VELOCITY = 2;
+
+        function getSwipeVelocity(currentX, currentTime) {
+            if (lastTouchX === null || lastTouchTime === null) {
+                return 0;
+            }
+            const dx = currentX - lastTouchX;
+            const dt = currentTime - lastTouchTime;
+            return dx / dt; // pixels per millisecond
+        }
+
+        function applySpringForce(displacement) {
+            const force = -SPRING_CONSTANT * displacement;
+            const maxDisplacement = 100;
+            if (Math.abs(displacement) > maxDisplacement) {
+                const excess = Math.abs(displacement) - maxDisplacement;
+                const direction = displacement > 0 ? 1 : -1;
+                return maxDisplacement * direction + excess * 0.2;
+            }
+            return displacement;
+        }
+
+        function triggerHapticFeedback() {
+            if (navigator.vibrate) {
+                navigator.vibrate(8);
+            }
+        }
+
+        function handleTouchStart(event) {
+            if (currentSwipingElement) return;
+            
+            const touch = event.touches[0];
+            swipeStartX = touch.clientX;
+            swipeStartY = touch.clientY;
+            swipeStartTime = Date.now();
+            lastTouchX = touch.clientX;
+            lastTouchTime = Date.now();
+            currentSwipingElement = event.target.closest('.todo-item');
+            isVerticalScroll = false;
+            swipeVelocity = 0;
+            
+            currentSwipingElement.classList.add('swiping');
+        }
+
+        function handleTouchMove(event) {
+            if (!swipeStartX || !currentSwipingElement) return;
+
+            const touch = event.touches[0];
+            const currentTime = Date.now();
+            const diffX = touch.clientX - swipeStartX;
+            const diffY = Math.abs(touch.clientY - swipeStartY);
+
+            // Update velocity calculation
+            swipeVelocity = getSwipeVelocity(touch.clientX, currentTime);
+            lastTouchX = touch.clientX;
+            lastTouchTime = currentTime;
+
+            // Check if it's more of a vertical scroll
+            if (!isVerticalScroll) {
+                isVerticalScroll = diffY > Math.abs(diffX);
+            }
+
+            if (isVerticalScroll) {
+                handleTouchEnd(event);
+                return;
+            }
+
+            event.preventDefault();
+            
+            // Apply transform with spring physics
+            const adjustedDiffX = applySpringForce(diffX);
+            currentSwipingElement.style.transform = `translateX(${adjustedDiffX}px)`;
+
+            // Show appropriate swipe hint with dynamic opacity
+            const swipeHint = currentSwipingElement.querySelector('.swipe-hint');
+            if (Math.abs(diffX) > 10) {
+                const progress = Math.min(Math.abs(diffX) / 75, 1);
+                swipeHint.style.opacity = progress;
+                
+                if (diffX < 0) {
+                    swipeHint.classList.add('delete');
+                    swipeHint.classList.remove('complete');
+                } else {
+                    swipeHint.classList.add('complete');
+                    swipeHint.classList.remove('delete');
+                }
+
+                // Trigger haptic feedback at certain thresholds
+                if (progress >= 0.5 && !swipeHint.dataset.hapticFired) {
+                    triggerHapticFeedback();
+                    swipeHint.dataset.hapticFired = 'true';
+                }
+            } else {
+                swipeHint.style.opacity = 0;
+                delete swipeHint.dataset.hapticFired;
+            }
+        }
+
+        function handleTouchEnd(event) {
+            if (!currentSwipingElement) return;
+
+            const swipeHint = currentSwipingElement.querySelector('.swipe-hint');
+            const touch = event.changedTouches[0];
+            const diffX = touch.clientX - swipeStartX;
+            const diffTime = Date.now() - swipeStartTime;
+            
+            // Calculate final velocity (pixels per millisecond)
+            const velocity = Math.abs(swipeVelocity);
+            
+            // Dynamic threshold based on velocity
+            const velocityThreshold = Math.max(
+                MIN_SWIPE_VELOCITY,
+                Math.min(velocity, MAX_SWIPE_VELOCITY)
+            );
+            
+            const swipeThreshold = Math.max(50, 100 - (velocityThreshold * 25));
+            
+            if (!isVerticalScroll && Math.abs(diffX) > swipeThreshold) {
+                // Add swipe-out animation class
+                if (diffX < 0) {
+                    currentSwipingElement.classList.add('swipe-delete');
+                    setTimeout(() => deleteTodo(parseInt(currentSwipingElement.getAttribute('data-id'))), 300);
+                } else {
+                    currentSwipingElement.classList.add('swipe-complete');
+                    const todo = todos.find(t => t.id === parseInt(currentSwipingElement.getAttribute('data-id')));
+                    if (todo) {
+                        setTimeout(() => toggleTodo(todo), 300);
+                    }
+                }
+                triggerHapticFeedback();
+            } else {
+                // Animate back to original position with spring effect
+                currentSwipingElement.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                currentSwipingElement.style.transform = 'translateX(0)';
+            }
+
+            // Clean up
+            swipeHint.style.opacity = 0;
+            delete swipeHint.dataset.hapticFired;
+            currentSwipingElement.classList.remove('swiping');
+            setTimeout(() => {
+                currentSwipingElement.style.transition = '';
+            }, 300);
+
+            // Reset state
+            swipeStartX = null;
+            swipeStartY = null;
+            swipeStartTime = null;
+            lastTouchX = null;
+            lastTouchTime = null;
+            currentSwipingElement = null;
+            isVerticalScroll = false;
+            swipeVelocity = 0;
+        }
+
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            const title = input.value.trim();
+            
+            if (!title) return;
+
+            fetch('/api/v1/todos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: title,
+                    completed: false
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                todos = data;
+                renderTodos();
+                input.value = '';
+            })
+            .catch(error => console.error('Error adding todo:', error));
+        }
+
+        function toggleTodo(todo) {
+            fetch('/api/v1/todos', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...todo,
+                    completed: !todo.completed
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                todos = data;
+                renderTodos();
+            })
+            .catch(error => console.error('Error updating todo:', error));
+        }
+
+        function deleteTodo(todoId) {
+            fetch(`/api/v1/todos?todo_id=${todoId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                todos = data;
+                renderTodos();
+            })
+            .catch(error => console.error('Error deleting todo:', error));
+        }
+
+        // Add event listener for enter key on input
+        document.getElementById('todoInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTodo();
+            }
+        });
+
+        // Initial fetch and start auto-fetch
+        fetchTodos();
+        setInterval(fetchTodos, 1000);
+    </script>
+</body>
+</html>
