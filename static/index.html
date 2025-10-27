@@ -3,536 +3,861 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ToDo App</title>
+    <title>My Tasks</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         body {
-            background: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-            padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
         }
 
         .container {
-            background: white;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .notebook {
+            background: linear-gradient(180deg, #f9f6f0 0%, #ebe5d9 100%);
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            padding: 40px;
+            position: relative;
+        }
+
+        .notebook::before {
+            content: '';
+            position: absolute;
+            left: 60px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, 
+                transparent 0%, 
+                #e4777f 5%, 
+                #e4777f 95%, 
+                transparent 100%);
         }
 
         h1 {
-            text-align: center;
+            font-size: 32px;
             color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 28px;
+            margin-bottom: 30px;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+            padding-left: 20px;
         }
 
-        .add-todo {
+        .tabs {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            padding-left: 20px;
         }
 
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-
-        button {
-            background: #3498db;
-            color: white;
-            border: none;
+        .tab {
             padding: 12px 24px;
-            border-radius: 8px;
+            background: linear-gradient(180deg, #d4cec3 0%, #b8b0a0 100%);
+            border: 1px solid #a39d8f;
+            border-radius: 8px 8px 0 0;
             cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #5a5a5a;
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
         }
 
-        button:hover {
-            background: #2980b9;
+        .tab:hover {
+            background: linear-gradient(180deg, #e0dbd0 0%, #c4beb0 100%);
+        }
+
+        .tab.active {
+            background: linear-gradient(180deg, #f9f6f0 0%, #ebe5d9 100%);
+            border-bottom-color: transparent;
+            box-shadow: 
+                inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .add-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: linear-gradient(180deg, #5cb85c 0%, #449d44 100%);
+            border: 1px solid #3d8b3d;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transition: all 0.2s;
+            margin: 20px 0 30px 20px;
+            border: none;
+        }
+
+        .add-button:hover {
+            background: linear-gradient(180deg, #6cc56c 0%, #50a950 100%);
             transform: translateY(-1px);
+            box-shadow: 
+                0 6px 12px rgba(0, 0, 0, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .add-button:active {
+            transform: translateY(0);
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.2),
+                inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-left: 20px;
+            margin-bottom: 30px;
+        }
+
+        .quick-button {
+            padding: 8px 16px;
+            background: linear-gradient(180deg, #f0f0f0 0%, #d8d8d8 100%);
+            border: 1px solid #c0c0c0;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            transition: all 0.2s;
+        }
+
+        .quick-button:hover {
+            background: linear-gradient(180deg, #fafafa 0%, #e0e0e0 100%);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 3px 6px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .quick-button:active {
+            transform: translateY(0);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
         }
 
         .todo-list {
             list-style: none;
+            padding-left: 20px;
         }
 
         .todo-item {
-            background: #f8f9fa;
-            padding: 15px;
+            background: white;
             border-radius: 8px;
-            margin-bottom: 10px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid #ddd;
+            transition: all 0.2s;
+        }
+
+        .todo-item:hover {
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .todo-header {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            touch-action: pan-y pinch-zoom;
-            position: relative;
-            transition: background-color 0.3s ease;
-            overflow: hidden;
-            will-change: transform;
-            transform: translateX(0);
-            -webkit-transform: translateX(0);
-            user-select: none;
-            -webkit-user-select: none;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
         }
 
-        .todo-item .content {
+        .todo-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
             flex: 1;
-            transition: opacity 0.2s ease;
         }
 
-        .todo-item.completed {
-            background: #e8f5e9;
+        .todo-description {
+            color: #666;
+            margin-bottom: 12px;
+            line-height: 1.5;
         }
 
-        .todo-item.completed .content {
-            text-decoration: line-through;
+        .todo-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-not-started {
+            background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%);
             color: #666;
         }
 
-        .todo-item.swiping {
-            cursor: grabbing;
-            background: #f0f0f0;
+        .status-in-progress {
+            background: linear-gradient(180deg, #ffd54f 0%, #ffb300 100%);
+            color: #7f5a00;
         }
 
-        .todo-item.swipe-delete {
-            animation: slideOutLeft 0.3s ease forwards;
+        .status-completed {
+            background: linear-gradient(180deg, #81c784 0%, #66bb6a 100%);
+            color: white;
         }
 
-        .todo-item.swipe-complete {
-            animation: slideOutRight 0.3s ease forwards;
-        }
-
-        @keyframes slideOutLeft {
-            to {
-                transform: translateX(-100%);
-                opacity: 0;
-            }
-        }
-
-        @keyframes slideOutRight {
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-
-        .action-buttons {
-            display: none;
+        .todo-actions {
+            display: flex;
             gap: 8px;
         }
 
-        @media (hover: hover) {
-            .todo-item .action-buttons {
-                display: flex;
-            }
-
-            .instruction.mobile {
-                display: none;
-            }
+        .icon-button {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background: linear-gradient(180deg, #fafafa 0%, #e0e0e0 100%);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
         }
 
-        @media (hover: none) {
-            .todo-item .action-buttons {
-                display: none;
-            }
-
-            .instruction.desktop {
-                display: none;
-            }
+        .icon-button:hover {
+            background: linear-gradient(180deg, #fff 0%, #e8e8e8 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         }
 
-        .btn-complete {
-            background: #27ae60;
-            padding: 8px 16px;
-            font-size: 14px;
+        .icon-button:active {
+            transform: translateY(0);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
         }
 
-        .btn-complete:hover {
-            background: #219a52;
-        }
-
-        .btn-delete {
-            background: #e74c3c;
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-
-        .btn-delete:hover {
-            background: #c0392b;
-        }
-
-        .swipe-hint {
-            position: absolute;
+        .modal {
+            display: none;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none;
-            border-radius: 8px;
-            opacity: 0;
-            transition: all 0.2s ease;
-            display: flex;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
             align-items: center;
-            justify-content: flex-end;
-            padding: 0 20px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(180deg, #f9f6f0 0%, #ebe5d9 100%);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            border: 1px solid #d4cec3;
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 24px;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
             font-size: 14px;
         }
 
-        .swipe-hint.delete {
-            background: linear-gradient(to right, transparent, rgba(231, 76, 60, 0.9));
-            justify-content: flex-end;
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #c4beb0;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
         }
 
-        .swipe-hint.complete {
-            background: linear-gradient(to left, transparent, rgba(39, 174, 96, 0.9));
-            justify-content: flex-start;
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.05),
+                0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .swipe-hint.delete::after {
-            content: "Delete";
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .quick-date-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .quick-date-button {
+            padding: 6px 12px;
+            background: linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 100%);
+            border: 1px solid #b8b8b8;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        .quick-date-button:hover {
+            background: linear-gradient(180deg, #f0f0f0 0%, #d8d8d8 100%);
+            transform: translateY(-1px);
+        }
+
+        .quick-date-button:active {
+            transform: translateY(0);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .button {
+            flex: 1;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid;
+            transition: all 0.2s;
+        }
+
+        .button-primary {
+            background: linear-gradient(180deg, #667eea 0%, #5568d3 100%);
+            border-color: #4a5bb8;
             color: white;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
-        .swipe-hint.complete::after {
-            content: "Complete";
-            color: white;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        .button-primary:hover {
+            background: linear-gradient(180deg, #778bf5 0%, #6679de 100%);
+            transform: translateY(-1px);
         }
 
-        .instruction {
+        .button-secondary {
+            background: linear-gradient(180deg, #e0e0e0 0%, #c4c4c4 100%);
+            border-color: #aaa;
+            color: #333;
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        .button-secondary:hover {
+            background: linear-gradient(180deg, #ececec 0%, #d0d0d0 100%);
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
             text-align: center;
-            color: #666;
-            margin-top: 20px;
-            font-size: 14px;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .repeating-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: linear-gradient(180deg, #b39ddb 0%, #9575cd 100%);
+            color: white;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Todo App</h1>
-        <div class="add-todo">
-            <input type="text" id="todoInput" placeholder="Add a new task..." autocomplete="off">
-            <button onclick="addTodo()">Add</button>
+        <div class="notebook">
+            <h1>📋 My Tasks</h1>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="regular">Regular Todos</div>
+                <div class="tab" data-tab="repeating">Repeating Todos</div>
+            </div>
+
+            <div class="content active" id="regular-content">
+                <button class="add-button" onclick="openModal('regular')">
+                    <span>+</span> Add Todo
+                </button>
+                <div class="quick-actions">
+                    <button class="quick-button" onclick="quickCreateTodo('regular', '1 hour', 3600)">⚡ In 1 hour</button>
+                    <button class="quick-button" onclick="quickCreateTodo('regular', 'Today', 86400)">📅 Today</button>
+                    <button class="quick-button" onclick="quickCreateTodo('regular', 'Tomorrow', 172800)">🌅 Tomorrow</button>
+                    <button class="quick-button" onclick="quickCreateTodo('regular', 'This week', 604800)">📆 This week</button>
+                </div>
+                <ul class="todo-list" id="regular-list">
+                    <div class="loading">Loading todos...</div>
+                </ul>
+            </div>
+
+            <div class="content" id="repeating-content">
+                <button class="add-button" onclick="openModal('repeating')">
+                    <span>+</span> Add Repeating Todo
+                </button>
+                <div class="quick-actions">
+                    <button class="quick-button" onclick="quickCreateTodo('repeating', 'Daily', 86400)">🔄 Daily</button>
+                    <button class="quick-button" onclick="quickCreateTodo('repeating', 'Weekly', 604800)">📅 Weekly</button>
+                    <button class="quick-button" onclick="quickCreateTodo('repeating', 'Monthly', 2592000)">🗓️ Monthly</button>
+                </div>
+                <ul class="todo-list" id="repeating-list">
+                    <div class="loading">Loading repeating todos...</div>
+                </ul>
+            </div>
         </div>
-        <ul id="todoList" class="todo-list"></ul>
-        <p class="instruction mobile">Swipe left to delete, right to mark as done</p>
-        <p class="instruction desktop">Use the buttons to manage your todos</p>
+    </div>
+
+    <!-- Todo Modal -->
+    <div class="modal" id="todo-modal">
+        <div class="modal-content">
+            <h2 class="modal-header" id="modal-title">Add Todo</h2>
+            <form id="todo-form">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="todo-title" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="todo-description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="todo-status">
+                        <option value="not started">Not Started</option>
+                        <option value="in progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-group" id="due-date-group">
+                    <label class="form-label">Due Date</label>
+                    <input type="datetime-local" class="form-input" id="todo-due-date">
+                    <div class="quick-date-buttons">
+                        <button type="button" class="quick-date-button" onclick="setQuickDate(3600)">1 hour</button>
+                        <button type="button" class="quick-date-button" onclick="setQuickDate(86400)">1 day</button>
+                        <button type="button" class="quick-date-button" onclick="setQuickDate(172800)">2 days</button>
+                        <button type="button" class="quick-date-button" onclick="setQuickDate(604800)">1 week</button>
+                        <button type="button" class="quick-date-button" onclick="setQuickDate(2592000)">1 month</button>
+                    </div>
+                </div>
+                <div class="form-group" id="interval-group" style="display: none;">
+                    <label class="form-label">Repeat Interval</label>
+                    <select class="form-select" id="todo-interval">
+                        <option value="3600">Every hour</option>
+                        <option value="86400">Daily</option>
+                        <option value="604800">Weekly</option>
+                        <option value="2592000">Monthly</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <input type="number" class="form-input" id="custom-interval" placeholder="Seconds" style="display: none; margin-top: 8px;">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="button button-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="button button-primary">Save</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
-        let todos = [];
-        let swipeStartX = null;
-        let swipeStartY = null;
-        let swipeStartTime = null;
-        let currentSwipingElement = null;
-        let isVerticalScroll = false;
+        const API_BASE = '/api/v1';
+        let currentTab = 'regular';
+        let editingId = null;
 
-        function fetchTodos() {
-            fetch('/api/v1/todos')
-                .then(response => response.json())
-                .then(data => {
-                    todos = data;
-                    renderTodos();
-                })
-                .catch(error => console.error('Error fetching todos:', error));
-        }
-
-        function renderTodos() {
-            const todoList = document.getElementById('todoList');
-            todoList.innerHTML = '';
-            
-            todos.forEach(todo => {
-                const li = document.createElement('li');
-                li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
-                li.setAttribute('data-id', todo.id);
-
-                const content = document.createElement('div');
-                content.className = 'content';
-                content.textContent = todo.title;
-
-                const actionButtons = document.createElement('div');
-                actionButtons.className = 'action-buttons';
-                
-                const completeBtn = document.createElement('button');
-                completeBtn.className = 'btn-complete';
-                completeBtn.textContent = todo.completed ? 'Undo' : 'Complete';
-                completeBtn.onclick = () => toggleTodo(todo);
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn-delete';
-                deleteBtn.textContent = 'Delete';
-                deleteBtn.onclick = () => deleteTodo(todo.id);
-
-                actionButtons.appendChild(completeBtn);
-                actionButtons.appendChild(deleteBtn);
-
-                const swipeHint = document.createElement('div');
-                swipeHint.className = 'swipe-hint';
-
-                li.appendChild(content);
-                li.appendChild(actionButtons);
-                li.appendChild(swipeHint);
-
-                // Add touch event listeners only for touch devices
-                if (window.matchMedia('(hover: none)').matches) {
-                    li.addEventListener('touchstart', handleTouchStart);
-                    li.addEventListener('touchmove', handleTouchMove);
-                    li.addEventListener('touchend', handleTouchEnd);
-                }
-
-                todoList.appendChild(li);
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                switchTab(tabName);
             });
+        });
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-content`).classList.add('active');
         }
 
-        let lastTouchX = null;
-        let lastTouchTime = null;
-        let swipeVelocity = 0;
-        const SPRING_CONSTANT = 0.1;
-        const MIN_SWIPE_VELOCITY = 0.3;
-        const MAX_SWIPE_VELOCITY = 2;
-
-        function getSwipeVelocity(currentX, currentTime) {
-            if (lastTouchX === null || lastTouchTime === null) {
-                return 0;
-            }
-            const dx = currentX - lastTouchX;
-            const dt = currentTime - lastTouchTime;
-            return dx / dt; // pixels per millisecond
-        }
-
-        function applySpringForce(displacement) {
-            const force = -SPRING_CONSTANT * displacement;
-            const maxDisplacement = 100;
-            if (Math.abs(displacement) > maxDisplacement) {
-                const excess = Math.abs(displacement) - maxDisplacement;
-                const direction = displacement > 0 ? 1 : -1;
-                return maxDisplacement * direction + excess * 0.2;
-            }
-            return displacement;
-        }
-
-        function triggerHapticFeedback() {
-            if (navigator.vibrate) {
-                navigator.vibrate(8);
-            }
-        }
-
-        function handleTouchStart(event) {
-            if (currentSwipingElement) return;
-            
-            const touch = event.touches[0];
-            swipeStartX = touch.clientX;
-            swipeStartY = touch.clientY;
-            swipeStartTime = Date.now();
-            lastTouchX = touch.clientX;
-            lastTouchTime = Date.now();
-            currentSwipingElement = event.target.closest('.todo-item');
-            isVerticalScroll = false;
-            swipeVelocity = 0;
-            
-            currentSwipingElement.classList.add('swiping');
-        }
-
-        function handleTouchMove(event) {
-            if (!swipeStartX || !currentSwipingElement) return;
-
-            const touch = event.touches[0];
-            const currentTime = Date.now();
-            const diffX = touch.clientX - swipeStartX;
-            const diffY = Math.abs(touch.clientY - swipeStartY);
-
-            // Update velocity calculation
-            swipeVelocity = getSwipeVelocity(touch.clientX, currentTime);
-            lastTouchX = touch.clientX;
-            lastTouchTime = currentTime;
-
-            // Check if it's more of a vertical scroll
-            if (!isVerticalScroll) {
-                isVerticalScroll = diffY > Math.abs(diffX);
-            }
-
-            if (isVerticalScroll) {
-                handleTouchEnd(event);
-                return;
-            }
-
-            event.preventDefault();
-            
-            // Apply transform with spring physics
-            const adjustedDiffX = applySpringForce(diffX);
-            currentSwipingElement.style.transform = `translateX(${adjustedDiffX}px)`;
-
-            // Show appropriate swipe hint with dynamic opacity
-            const swipeHint = currentSwipingElement.querySelector('.swipe-hint');
-            if (Math.abs(diffX) > 10) {
-                const progress = Math.min(Math.abs(diffX) / 75, 1);
-                swipeHint.style.opacity = progress;
-                
-                if (diffX < 0) {
-                    swipeHint.classList.add('delete');
-                    swipeHint.classList.remove('complete');
-                } else {
-                    swipeHint.classList.add('complete');
-                    swipeHint.classList.remove('delete');
-                }
-
-                // Trigger haptic feedback at certain thresholds
-                if (progress >= 0.5 && !swipeHint.dataset.hapticFired) {
-                    triggerHapticFeedback();
-                    swipeHint.dataset.hapticFired = 'true';
-                }
+        // Interval selector handling
+        document.getElementById('todo-interval').addEventListener('change', (e) => {
+            const customInput = document.getElementById('custom-interval');
+            if (e.target.value === 'custom') {
+                customInput.style.display = 'block';
+                customInput.required = true;
             } else {
-                swipeHint.style.opacity = 0;
-                delete swipeHint.dataset.hapticFired;
-            }
-        }
-
-        function handleTouchEnd(event) {
-            if (!currentSwipingElement) return;
-
-            const swipeHint = currentSwipingElement.querySelector('.swipe-hint');
-            const touch = event.changedTouches[0];
-            const diffX = touch.clientX - swipeStartX;
-            const diffTime = Date.now() - swipeStartTime;
-            
-            // Calculate final velocity (pixels per millisecond)
-            const velocity = Math.abs(swipeVelocity);
-            
-            // Dynamic threshold based on velocity
-            const velocityThreshold = Math.max(
-                MIN_SWIPE_VELOCITY,
-                Math.min(velocity, MAX_SWIPE_VELOCITY)
-            );
-            
-            const swipeThreshold = Math.max(50, 100 - (velocityThreshold * 25));
-            
-            if (!isVerticalScroll && Math.abs(diffX) > swipeThreshold) {
-                // Add swipe-out animation class
-                if (diffX < 0) {
-                    currentSwipingElement.classList.add('swipe-delete');
-                    setTimeout(() => deleteTodo(parseInt(currentSwipingElement.getAttribute('data-id'))), 300);
-                } else {
-                    currentSwipingElement.classList.add('swipe-complete');
-                    const todo = todos.find(t => t.id === parseInt(currentSwipingElement.getAttribute('data-id')));
-                    if (todo) {
-                        setTimeout(() => toggleTodo(todo), 300);
-                    }
-                }
-                triggerHapticFeedback();
-            } else {
-                // Animate back to original position with spring effect
-                currentSwipingElement.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                currentSwipingElement.style.transform = 'translateX(0)';
-            }
-
-            // Clean up
-            swipeHint.style.opacity = 0;
-            delete swipeHint.dataset.hapticFired;
-            currentSwipingElement.classList.remove('swiping');
-            setTimeout(() => {
-                currentSwipingElement.style.transition = '';
-            }, 300);
-
-            // Reset state
-            swipeStartX = null;
-            swipeStartY = null;
-            swipeStartTime = null;
-            lastTouchX = null;
-            lastTouchTime = null;
-            currentSwipingElement = null;
-            isVerticalScroll = false;
-            swipeVelocity = 0;
-        }
-
-        function addTodo() {
-            const input = document.getElementById('todoInput');
-            const title = input.value.trim();
-            
-            if (!title) return;
-
-            fetch('/api/v1/todos', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    title: title,
-                    completed: false
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                todos = data;
-                renderTodos();
-                input.value = '';
-            })
-            .catch(error => console.error('Error adding todo:', error));
-        }
-
-        function toggleTodo(todo) {
-            fetch('/api/v1/todos', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ...todo,
-                    completed: !todo.completed
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                todos = data;
-                renderTodos();
-            })
-            .catch(error => console.error('Error updating todo:', error));
-        }
-
-        function deleteTodo(todoId) {
-            fetch(`/api/v1/todos?todo_id=${todoId}`, {
-                method: 'DELETE'
-            })
-            .then(response => response.json())
-            .then(data => {
-                todos = data;
-                renderTodos();
-            })
-            .catch(error => console.error('Error deleting todo:', error));
-        }
-
-        // Add event listener for enter key on input
-        document.getElementById('todoInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addTodo();
+                customInput.style.display = 'none';
+                customInput.required = false;
             }
         });
 
-        // Initial fetch and start auto-fetch
-        fetchTodos();
-        setInterval(fetchTodos, 1000);
+        // Load todos
+        async function loadTodos() {
+            try {
+                const response = await fetch(`${API_BASE}/todos`);
+                const todos = await response.json();
+                renderTodos(todos, 'regular-list', false);
+            } catch (error) {
+                document.getElementById('regular-list').innerHTML = 
+                    '<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>Error loading todos</p></div>';
+            }
+        }
+
+        async function loadRepeatingTodos() {
+            try {
+                const response = await fetch(`${API_BASE}/repeating-todos`);
+                const todos = await response.json();
+                renderTodos(todos, 'repeating-list', true);
+            } catch (error) {
+                document.getElementById('repeating-list').innerHTML = 
+                    '<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>Error loading repeating todos</p></div>';
+            }
+        }
+
+        function renderTodos(todos, listId, isRepeating) {
+            const list = document.getElementById(listId);
+            
+            if (!todos || todos.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>No todos yet. Add one to get started!</p></div>';
+                return;
+            }
+
+            list.innerHTML = todos.map(todo => {
+                const metaInfo = isRepeating 
+                    ? `<span class="repeating-badge">🔄 Every ${formatInterval(todo.interval_seconds)}</span>`
+                    : `<span>📅 Due: ${formatDate(todo.to_be_done_by)}</span>`;
+                
+                return `
+                    <li class="todo-item">
+                        <div class="todo-header">
+                            <div class="todo-title">${escapeHtml(todo.title)}</div>
+                            <div class="todo-actions">
+                                <button class="icon-button" onclick="editTodo(${todo.id}, '${isRepeating ? 'repeating' : 'regular'}')" title="Edit">✏️</button>
+                                <button class="icon-button" onclick="deleteTodo(${todo.id}, '${isRepeating ? 'repeating' : 'regular'}')" title="Delete">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="todo-description">${escapeHtml(todo.description)}</div>
+                        <div class="todo-meta">
+                            <span class="status-badge status-${todo.status.replace(/ /g, '-')}">${todo.status}</span>
+                            ${metaInfo}
+                        </div>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        function formatInterval(seconds) {
+            if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
+            if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
+            if (seconds < 604800) return `${Math.round(seconds / 86400)} days`;
+            if (seconds < 2592000) return `${Math.round(seconds / 604800)} weeks`;
+            return `${Math.round(seconds / 2592000)} months`;
+        }
+
+        function formatDate(timestamp) {
+            return new Date(timestamp * 1000).toLocaleString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function setQuickDate(seconds) {
+            const date = new Date(Date.now() + seconds * 1000);
+            document.getElementById('todo-due-date').value = date.toISOString().slice(0, 16);
+        }
+
+        async function quickCreateTodo(type, titleSuffix, secondsOrInterval) {
+            const title = prompt(`Enter title for ${titleSuffix.toLowerCase()} todo:`);
+            if (!title) return;
+
+            const description = prompt('Enter description (optional):') || 'Quick todo';
+            
+            try {
+                if (type === 'regular') {
+                    const todoData = {
+                        title,
+                        description,
+                        status: 'not started',
+                        created_at: Date.now() / 1000,
+                        to_be_done_by: Date.now() / 1000 + secondsOrInterval
+                    };
+                    
+                    await fetch(`${API_BASE}/todos`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(todoData)
+                    });
+                    
+                    loadTodos();
+                } else {
+                    const todoData = {
+                        title,
+                        description,
+                        status: 'not started',
+                        interval_seconds: secondsOrInterval
+                    };
+                    
+                    await fetch(`${API_BASE}/repeating-todos`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(todoData)
+                    });
+                    
+                    loadRepeatingTodos();
+                }
+            } catch (error) {
+                alert('Error creating todo');
+            }
+        }
+
+        // Modal functions
+        function openModal(type) {
+            currentTab = type;
+            editingId = null;
+            
+            document.getElementById('modal-title').textContent = `Add ${type === 'repeating' ? 'Repeating ' : ''}Todo`;
+            document.getElementById('todo-form').reset();
+            
+            if (type === 'repeating') {
+                document.getElementById('due-date-group').style.display = 'none';
+                document.getElementById('interval-group').style.display = 'block';
+            } else {
+                document.getElementById('due-date-group').style.display = 'block';
+                document.getElementById('interval-group').style.display = 'none';
+            }
+            
+            document.getElementById('todo-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('todo-modal').classList.remove('active');
+            editingId = null;
+        }
+
+        async function editTodo(id, type) {
+            currentTab = type;
+            editingId = id;
+            
+            try {
+                const endpoint = type === 'repeating' ? 'repeating-todos' : 'todos';
+                const response = await fetch(`${API_BASE}/${endpoint}/${id}`);
+                const todo = await response.json();
+                
+                document.getElementById('modal-title').textContent = `Edit ${type === 'repeating' ? 'Repeating ' : ''}Todo`;
+                document.getElementById('todo-title').value = todo.title;
+                document.getElementById('todo-description').value = todo.description;
+                document.getElementById('todo-status').value = todo.status;
+                
+                if (type === 'repeating') {
+                    document.getElementById('due-date-group').style.display = 'none';
+                    document.getElementById('interval-group').style.display = 'block';
+                    
+                    const intervalSelect = document.getElementById('todo-interval');
+                    const customInterval = document.getElementById('custom-interval');
+                    
+                    if ([3600, 86400, 604800, 2592000].includes(todo.interval_seconds)) {
+                        intervalSelect.value = todo.interval_seconds.toString();
+                        customInterval.style.display = 'none';
+                    } else {
+                        intervalSelect.value = 'custom';
+                        customInterval.value = todo.interval_seconds;
+                        customInterval.style.display = 'block';
+                    }
+                } else {
+                    document.getElementById('due-date-group').style.display = 'block';
+                    document.getElementById('interval-group').style.display = 'none';
+                    
+                    const date = new Date(todo.to_be_done_by * 1000);
+                    document.getElementById('todo-due-date').value = date.toISOString().slice(0, 16);
+                }
+                
+                document.getElementById('todo-modal').classList.add('active');
+            } catch (error) {
+                alert('Error loading todo');
+            }
+        }
+
+        async function deleteTodo(id, type) {
+            if (!confirm('Are you sure you want to delete this todo?')) return;
+            
+            try {
+                const endpoint = type === 'repeating' ? 'repeating-todos' : 'todos';
+                const response = await fetch(`${API_BASE}/${endpoint}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete todo');
+                }
+
+                if (type === 'repeating') {
+                    loadRepeatingTodos();
+                } else {
+                    loadTodos();
+                }
+            } catch (error) {
+                alert('Error deleting todo: ' + error.message);
+            }
+        }
+
+        // Form Submission
+        document.getElementById('todo-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const isRepeating = currentTab === 'repeating';
+            const endpoint = isRepeating ? 'repeating-todos' : 'todos';
+            const method = editingId ? 'PUT' : 'POST';
+            const url = editingId ? `${API_BASE}/${endpoint}/${editingId}` : `${API_BASE}/${endpoint}`;
+
+            let body;
+            const title = document.getElementById('todo-title').value;
+            const description = document.getElementById('todo-description').value;
+            const status = document.getElementById('todo-status').value;
+
+            try {
+                if (isRepeating) {
+                    const intervalSelect = document.getElementById('todo-interval');
+                    let interval_seconds;
+
+                    if (intervalSelect.value === 'custom') {
+                        interval_seconds = parseInt(document.getElementById('custom-interval').value, 10);
+                    } else {
+                        interval_seconds = parseInt(intervalSelect.value, 10);
+                    }
+
+                    if (isNaN(interval_seconds) || interval_seconds <= 0) {
+                        alert('Please enter a valid interval in seconds.');
+                        return;
+                    }
+
+                    body = JSON.stringify({ title, description, status, interval_seconds });
+                } else {
+                    const dueDate = document.getElementById('todo-due-date').value;
+                    if (!dueDate) {
+                        alert('Please select a due date.');
+                        return;
+                    }
+                    const to_be_done_by = Math.floor(new Date(dueDate).getTime() / 1000);
+                    body = JSON.stringify({ title, description, status, created_at: Math.floor(Date.now() / 1000), to_be_done_by });
+                }
+
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to save todo');
+                }
+
+                closeModal();
+                if (isRepeating) {
+                    loadRepeatingTodos();
+                } else {
+                    loadTodos();
+                }
+            } catch (error) {
+                alert('Error saving todo: ' + error.message);
+            }
+        });
+
+        // Initial Load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTodos();
+            loadRepeatingTodos();
+        });
     </script>
 </body>
 </html>
